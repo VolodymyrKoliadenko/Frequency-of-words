@@ -1,11 +1,15 @@
 package textfrequensytable;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -26,25 +30,50 @@ public class TextFrequensyTable {
     static LinkedHashMap<String, Integer> sortedMap;   //linked - iterator
     static long itogo = 0;
     static int unicalWords = 0;
+    static String METHOD = "internet";
 
     /**
      * @param args the command line arguments
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
-        //Path path = FileSystems.getDefault().getPath("d:/1джордан6.txt");
-        Path path;
-        
-        JFileChooser chooser = new JFileChooser();
-        chooser.showOpenDialog(null);
-        File f = chooser.getSelectedFile();
-        path = (f != null) ? f.toPath() 
-                : FileSystems.getDefault().getPath("d:/2.txt");
-        List<String> lines = Files.readAllLines(path, Charset.forName("UTF-8"));
 
+        List<String> lines = new ArrayList<>();
+        Path path = FileSystems.getDefault().getPath("d:/2.txt");
+
+        if (METHOD.equals("internet")) {
+            URL url = new URL("http://samlib.ru/r/runa_a/dorian.shtml");
+            try (BufferedReader in = new BufferedReader(
+                    new InputStreamReader(url.openStream(), "CP1251"))) {
+                boolean text = false;
+                String line;
+                while ((line = in.readLine()) != null) {
+                    if (line.contains("<body")) {
+                        text = true;
+                    }
+                    if (line.contains("</body>")) {
+                        break;
+                    }
+                    if (text) {
+                        line = line.replaceAll("&nbsp;", "");
+                        line = line.replaceAll("<dd>", "");
+                        line = line.replaceAll("html", "");
+                        //System.out.println(line);
+                        lines.add(line);
+                    }
+                }
+            }
+
+        } else {
+            JFileChooser chooser = new JFileChooser();
+            chooser.showOpenDialog(null);
+            File f = chooser.getSelectedFile();
+            path = f.toPath();
+            lines = Files.readAllLines(path, Charset.forName("UTF-8"));
+        }
         StringTokenizer st;
         for (String str : lines) {
-            st = new StringTokenizer(str, " .,!?\"()«»—–");
+            st = new StringTokenizer(str, " .,!?\"()«»—–:");
             while (st.hasMoreTokens()) {
                 addWord(st.nextToken());
             }
@@ -63,7 +92,7 @@ public class TextFrequensyTable {
         }
         System.out.println(itogo + " total (long) words. Unical words: " + unicalWords);
         new frameDiagramm();
-        
+
         //add Histogram
     }
 
